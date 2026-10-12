@@ -3,10 +3,6 @@ terraform {
   required_version = ">= 1.9.0"
 
   required_providers {
-    azuredevops = {
-      source  = "microsoft/azuredevops"
-      version = ">= 1.4, < 2.0"
-    }
     tfe = {
       source  = "hashicorp/tfe"
       version = ">= 0.64, < 1.0"
@@ -14,14 +10,12 @@ terraform {
   }
 }
 
-# No-code modules run as the root module of their workspace, so providers are
-# configured here. Credentials come from a variable set on the no-code
-# workspace's project, never from module variables:
-#   azuredevops: AZDO_ORG_SERVICE_URL, AZDO_PERSONAL_ACCESS_TOKEN (env)
-#   tfe:         TFE_TOKEN (env) - a team token that can manage workspaces in
-#                the "Customer Landing Zones" project
-provider "azuredevops" {}
-
+# No-code modules run as the root module of their workspace, so the provider
+# is configured here. TFE_TOKEN (env, sensitive) comes from a variable set on
+# the no-code workspace's project, never from module variables. It must be a
+# team token, not an organization token (those can't start runs), for a team
+# that can manage projects, teams, membership and variable sets.
 provider "tfe" {
+  hostname     = var.tfe_hostname
   organization = var.tfe_organization
 }

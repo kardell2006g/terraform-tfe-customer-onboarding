@@ -3,10 +3,10 @@ locals {
   company_slug = trim(replace(lower(var.company_name), "/[^a-z0-9]+/", "-"), "-")
   name         = "${local.company_slug}-${var.environment}"
 
-  project_name           = "${var.company_name} ${var.environment}"
-  readers_group_name     = "${local.project_name} Readers"
-  variable_group_name    = "${local.name}-aws-landing-zone"
-  aws_service_connection = "aws-${local.name}"
+  # Project names allow letters, digits, spaces, '-' and '_'.
+  project_name      = "${trimspace(replace(var.company_name, "/[^A-Za-z0-9 _-]/", ""))} ${var.environment}"
+  team_name         = "${local.name}-readers"
+  variable_set_name = "${local.name}-aws-landing-zone"
 
   landing_zone_workspace_name = "lz-${local.name}"
   aws_account_email           = "${var.aws_account_email_prefix}+${local.name}@${var.aws_account_email_domain}"

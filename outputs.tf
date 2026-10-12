@@ -1,21 +1,21 @@
 output "project_name" {
-  description = "Azure DevOps project name."
-  value       = azuredevops_project.this.name
+  description = "HCP Terraform project for the customer's workspaces."
+  value       = tfe_project.customer.name
 }
 
 output "project_id" {
-  description = "Azure DevOps project ID."
-  value       = azuredevops_project.this.id
+  description = "HCP Terraform project ID."
+  value       = tfe_project.customer.id
 }
 
-output "readers_group_name" {
-  description = "Read-only group created in the project."
-  value       = azuredevops_group.readers.display_name
+output "readers_team_name" {
+  description = "Team with read access to the project."
+  value       = tfe_team.readers.name
 }
 
-output "variable_group_name" {
-  description = "Variable group holding the landing zone settings."
-  value       = azuredevops_variable_group.this.name
+output "variable_set_name" {
+  description = "Variable set attached to the project with the landing zone settings and AWS dynamic credentials."
+  value       = tfe_variable_set.customer.name
 }
 
 output "aws_account_id" {
@@ -24,13 +24,8 @@ output "aws_account_id" {
 }
 
 output "aws_deploy_role_arn" {
-  description = "IAM role Azure DevOps pipelines assume (via OIDC) to deploy into the account."
+  description = "IAM role workspaces in the customer project assume via HCP Terraform dynamic credentials."
   value       = local.lz["deploy_role_arn"]
-}
-
-output "aws_service_connection_name" {
-  description = "Name the project's AWS service connection must have for the OIDC trust to match."
-  value       = local.aws_service_connection
 }
 
 output "landing_zone_workspace" {

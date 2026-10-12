@@ -3,12 +3,12 @@
 # ---------------------------------------------------------------------------
 
 variable "company_name" {
-  description = "Customer company name. Used for the Azure DevOps project, group, variable group and AWS account names."
+  description = "Customer company name. Used for the HCP Terraform project, team, variable set and AWS account names."
   type        = string
 
   validation {
-    condition     = can(regex("^[A-Za-z0-9][A-Za-z0-9 ._-]{1,40}$", var.company_name))
-    error_message = "company_name must be 2-41 characters: letters, digits, spaces, '.', '_' or '-', starting with a letter or digit."
+    condition     = can(regex("^[A-Za-z0-9][A-Za-z0-9 ._-]{1,29}$", var.company_name))
+    error_message = "company_name must be 2-30 characters: letters, digits, spaces, '.', '_' or '-', starting with a letter or digit."
   }
 }
 
@@ -23,12 +23,12 @@ variable "environment" {
 }
 
 variable "reader_emails" {
-  description = "Email addresses to add to the project's new read-only group. Users not yet in the Azure DevOps organization are added to it."
+  description = "Email addresses to add to the project's read-only team. Anyone not yet in the HCP Terraform organization gets an invitation."
   type        = list(string)
   default     = []
 
   validation {
-    condition     = alltrue([for e in var.reader_emails : can(regex("^[^@\s]+@[^@\s]+\.[^@\s]+$", e))])
+    condition     = alltrue([for e in var.reader_emails : can(regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$", e))])
     error_message = "Every entry in reader_emails must be a valid email address."
   }
 }
@@ -37,6 +37,12 @@ variable "reader_emails" {
 # Platform settings. Set these once in a variable set attached to the project
 # where no-code workspaces are created, so requesters never see them.
 # ---------------------------------------------------------------------------
+
+variable "tfe_hostname" {
+  description = "HCP Terraform / Terraform Enterprise hostname. Also the OIDC issuer the AWS deploy role trusts."
+  type        = string
+  default     = "app.terraform.io"
+}
 
 variable "tfe_organization" {
   description = "HCP Terraform / Terraform Enterprise organization name."
@@ -125,36 +131,4 @@ variable "vpc_cidr" {
   description = "CIDR block for the landing zone VPC."
   type        = string
   default     = "10.0.0.0/16"
-}
-
-variable "azdo_organization_name" {
-  description = "Azure DevOps organization name (the part after dev.azure.com/). Used in the AWS OIDC trust for pipelines."
-  type        = string
-}
-
-variable "azdo_organization_id" {
-  description = "Azure DevOps organization ID (GUID). Used for the AWS OIDC identity provider URL."
-  type        = string
-}
-
-variable "project_visibility" {
-  description = "Azure DevOps project visibility."
-  type        = string
-  default     = "private"
-
-  validation {
-    condition     = contains(["private", "public"], var.project_visibility)
-    error_message = "project_visibility must be private or public."
-  }
-}
-
-variable "user_license_type" {
-  description = "Access level for users added from reader_emails. \"stakeholder\" is free but can't read Repos; \"basic\" can."
-  type        = string
-  default     = "basic"
-
-  validation {
-    condition     = contains(["basic", "stakeholder"], var.user_license_type)
-    error_message = "user_license_type must be basic or stakeholder."
-  }
 }

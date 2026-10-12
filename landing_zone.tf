@@ -4,7 +4,7 @@
 # The landing zone gets its own HCP Terraform workspace in the shared
 # "Customer Landing Zones" project, so its state lives there and not in this
 # no-code workspace. This module creates that workspace, sets its variables,
-# runs it, then reads its outputs into the Azure DevOps variable group.
+# runs it, then reads its outputs into the customer project's variable set.
 # ---------------------------------------------------------------------------
 
 # Shared by every customer, so it's looked up rather than created here.
@@ -64,17 +64,16 @@ resource "tfe_workspace_variable_set" "landing_zone" {
 
 locals {
   landing_zone_vars = {
-    company_name                 = var.company_name
-    environment                  = var.environment
-    account_name                 = local.name
-    account_email                = local.aws_account_email
-    parent_ou_id                 = var.aws_organizational_unit_ids[var.environment]
-    aws_region                   = var.aws_region
-    vpc_cidr                     = var.vpc_cidr
-    azdo_organization_name       = var.azdo_organization_name
-    azdo_organization_id         = var.azdo_organization_id
-    azdo_project_name            = azuredevops_project.this.name
-    azdo_service_connection_name = local.aws_service_connection
+    company_name     = var.company_name
+    environment      = var.environment
+    account_name     = local.name
+    account_email    = local.aws_account_email
+    parent_ou_id     = var.aws_organizational_unit_ids[var.environment]
+    aws_region       = var.aws_region
+    vpc_cidr         = var.vpc_cidr
+    tfc_hostname     = var.tfe_hostname
+    tfc_organization = var.tfe_organization
+    tfc_project_name = tfe_project.customer.name
   }
 }
 
