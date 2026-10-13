@@ -69,7 +69,7 @@ locals {
     {
       company_name     = var.company_name
       environment      = var.environment
-      account_name     = local.name
+      account_name     = local.aws_account_name
       account_email    = local.aws_account_email
       aws_region       = var.aws_region
       vpc_cidr         = var.vpc_cidr

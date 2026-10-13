@@ -37,3 +37,8 @@ output "aws_account_email" {
   description = "Root email of the customer AWS account. Its +aws<number> tag is also the landing zone workspace's aws-email-tag."
   value       = local.aws_account_email
 }
+
+output "aws_account_name" {
+  description = "Name of the customer AWS account (<company>-<environment>-aws<number>)."
+  value       = local.aws_account_name
+}

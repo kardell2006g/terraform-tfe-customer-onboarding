@@ -104,6 +104,9 @@ workspace that doesn't declare the Terraform variables just gets an
   every customer account land in that one inbox. The number is generated once
   per customer and kept in state. Changing `aws_account_root_mailbox` later
   changes every account's email on its next apply.
+- **Account names** are `<company>-<env>-aws<number>` (e.g.
+  `acme-corp-prod-aws48213`), using the same number as the root email.
+  VPC, subnet and other resource names in the account start with it too.
 - **Tracing an email to its workspace.** The `+aws<number>` part is the
   landing zone workspace's `aws-email-tag` tag (search workspaces by it), and
   the full email is in the workspace description. In the other direction,

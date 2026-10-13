@@ -30,6 +30,10 @@ locals {
     split("@", var.aws_account_root_mailbox)[1],
   )
 
+  # acme-corp-prod-aws48213: same number as the email and the workspace tag.
+  # Max 47 characters (30 company + 8 environment + 9 suffix), under AWS's 50.
+  aws_account_name = "${local.name}-${local.aws_account_email_tag}"
+
   reader_emails = toset([for e in var.reader_emails : lower(trimspace(e))])
 }
 
