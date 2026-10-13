@@ -63,7 +63,7 @@ workspace that doesn't declare the Terraform variables just gets an
    and [customer-landing-zone](https://github.com/kardell2006g/customer-landing-zone).
    Protect `main` on `customer-landing-zone`; every merge queues a plan in
    every customer's `lz-*` workspace. Publishing a new module version needs a
-   semver tag (`git tag v1.2.0 && git push --tags`).
+   semver tag (`git tag v1.5.0 && git push --tags`).
 2. **Connect GitHub.** Organization settings → VCS providers → GitHub App,
    installed on `kardell2006g` with access to both repos.
 3. **Projects.** Create `Customer Landing Zones`, plus a project for the
@@ -83,12 +83,15 @@ workspace that doesn't declare the Terraform variables just gets an
    | Key | Category | Example |
    |---|---|---|
    | `TFE_TOKEN` | env, sensitive | the team token from step 5 |
-   | `tfe_organization` | terraform | `contoso` |
-   | `landing_zone_vcs_repo` | terraform | `kardell2006g/customer-landing-zone` |
    | `github_app_installation_name` | terraform | `kardell2006g` |
    | `landing_zone_variable_set_names` | terraform, HCL | `["aws-org-management"]` |
    | `aws_account_email_domain` | terraform | `contoso.com` |
    | `aws_organizational_unit_id` | terraform | `ou-ab12-cd34ef56` (optional; omit for the org root) |
+
+   The HCP Terraform organization isn't set anywhere: the module reads it
+   from `TFC_WORKSPACE_SLUG`, which HCP Terraform injects into every run.
+   For a local run, export `TFE_ORGANIZATION` instead. The landing zone repo
+   is fixed to `kardell2006g/customer-landing-zone` in `main.tf`.
 
 7. **Publish.** Registry → Publish → Module → GitHub → pick
    `terraform-tfe-customer-onboarding`, tick *Add module to no-code provision

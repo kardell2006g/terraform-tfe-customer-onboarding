@@ -17,5 +17,5 @@ terraform {
 # that can manage projects, teams, membership and variable sets.
 provider "tfe" {
   hostname     = var.tfe_hostname
-  organization = var.tfe_organization
+  organization = local.run_organization
 }

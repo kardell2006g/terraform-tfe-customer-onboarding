@@ -1,4 +1,13 @@
 locals {
+  # The landing zone code this module runs. Fixed so every customer gets the
+  # same landing zone; change the branch with landing_zone_vcs_branch.
+  landing_zone_vcs_repo = "kardell2006g/customer-landing-zone"
+
+  # Organization this module is running in, from TFC_WORKSPACE_SLUG. Null
+  # outside HCP Terraform, where the provider falls back to TFE_ORGANIZATION.
+  run_organization = var.TFC_WORKSPACE_SLUG != "" ? split("/", var.TFC_WORKSPACE_SLUG)[0] : null
+  tfe_organization = data.tfe_organization.current.name
+
   # "Acme Corp." -> "acme-corp"
   company_slug = trim(replace(lower(var.company_name), "/[^a-z0-9]+/", "-"), "-")
   name         = "${local.company_slug}-${var.environment}"
@@ -13,3 +22,7 @@ locals {
 
   reader_emails = toset([for e in var.reader_emails : lower(trimspace(e))])
 }
+
+# Resolves the provider's organization to a name for the resources that need
+# it spelled out.
+data "tfe_organization" "current" {}

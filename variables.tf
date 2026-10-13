@@ -44,9 +44,13 @@ variable "tfe_hostname" {
   default     = "app.terraform.io"
 }
 
-variable "tfe_organization" {
-  description = "HCP Terraform / Terraform Enterprise organization name."
+# HCP Terraform injects TFC_WORKSPACE_SLUG ("<organization>/<workspace>") into
+# every run and passes it to a variable of the same name, so the organization
+# comes from wherever the module runs. Nobody sets this.
+variable "TFC_WORKSPACE_SLUG" {
+  description = "Set automatically by HCP Terraform. Leave empty."
   type        = string
+  default     = ""
 }
 
 variable "landing_zone_project_name" {
@@ -55,30 +59,20 @@ variable "landing_zone_project_name" {
   default     = "Customer Landing Zones"
 }
 
-variable "landing_zone_vcs_repo" {
-  description = "GitHub repo (\"<owner>/<repo>\", e.g. \"contoso/customer-landing-zone\") containing the customer-landing-zone configuration."
-  type        = string
-
-  validation {
-    condition     = can(regex("^[A-Za-z0-9-]+/[A-Za-z0-9._-]+$", var.landing_zone_vcs_repo))
-    error_message = "landing_zone_vcs_repo must be a GitHub \"<owner>/<repo>\" identifier."
-  }
-}
-
 variable "landing_zone_vcs_branch" {
-  description = "Branch of landing_zone_vcs_repo to run from."
+  description = "Branch of the landing zone repo to run from."
   type        = string
   default     = "main"
 }
 
 variable "landing_zone_working_directory" {
-  description = "Directory inside landing_zone_vcs_repo that contains the landing zone configuration. Empty for the repo root."
+  description = "Directory inside the landing zone repo that contains the landing zone configuration. Empty for the repo root."
   type        = string
   default     = ""
 }
 
 variable "github_app_installation_name" {
-  description = "GitHub account or org name the HCP Terraform GitHub App is installed on, with access to landing_zone_vcs_repo. Leave null to use vcs_oauth_token_id instead."
+  description = "GitHub account or org name the HCP Terraform GitHub App is installed on, with access to the landing zone repo. Leave null to use vcs_oauth_token_id instead."
   type        = string
   default     = null
 }

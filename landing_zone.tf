@@ -36,7 +36,7 @@ resource "tfe_workspace" "landing_zone" {
   trigger_prefixes      = var.landing_zone_working_directory != "" ? [var.landing_zone_working_directory] : []
 
   vcs_repo {
-    identifier                 = var.landing_zone_vcs_repo
+    identifier                 = local.landing_zone_vcs_repo
     branch                     = var.landing_zone_vcs_branch
     github_app_installation_id = one(data.tfe_github_app_installation.this[*].id)
     oauth_token_id             = var.vcs_oauth_token_id
@@ -72,7 +72,7 @@ locals {
       aws_region       = var.aws_region
       vpc_cidr         = var.vpc_cidr
       tfc_hostname     = var.tfe_hostname
-      tfc_organization = var.tfe_organization
+      tfc_organization = local.tfe_organization
       tfc_project_name = tfe_project.customer.name
     },
     # Unset means the landing zone creates the account at the org root.
@@ -115,7 +115,7 @@ resource "tfe_workspace_run" "landing_zone" {
 # depends_on defers this read to apply time on the first run, when the
 # landing zone has no state yet.
 data "tfe_outputs" "landing_zone" {
-  organization = var.tfe_organization
+  organization = local.tfe_organization
   workspace    = tfe_workspace.landing_zone.name
 
   depends_on = [tfe_workspace_run.landing_zone]
