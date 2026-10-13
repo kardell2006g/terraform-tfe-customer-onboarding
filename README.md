@@ -31,7 +31,7 @@ recoverable for 90 days).
 
 ## What the landing zone builds
 
-- `aws_organizations_account` in the OU mapped from `environment`
+- `aws_organizations_account` in `aws_organizational_unit_id`, or the org root if that is unset
 - EBS encryption by default, account-level S3 public access block, IAM password
   policy, IAM Access Analyzer
 - VPC with public and private /20 subnets across 2 AZs, IGW, one NAT gateway,
@@ -88,7 +88,7 @@ workspace that doesn't declare the Terraform variables just gets an
    | `github_app_installation_name` | terraform | `kardell2006g` |
    | `landing_zone_variable_set_names` | terraform, HCL | `["aws-org-management"]` |
    | `aws_account_email_domain` | terraform | `contoso.com` |
-   | `aws_organizational_unit_ids` | terraform, HCL | `{ dev = "ou-..", test = "ou-..", staging = "ou-..", prod = "ou-.." }` |
+   | `aws_organizational_unit_id` | terraform | `ou-ab12-cd34ef56` (optional; omit for the org root) |
 
 7. **Publish.** Registry → Publish → Module → GitHub → pick
    `terraform-tfe-customer-onboarding`, tick *Add module to no-code provision

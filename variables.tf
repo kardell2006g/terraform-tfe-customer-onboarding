@@ -117,13 +117,14 @@ variable "aws_account_email_domain" {
   type        = string
 }
 
-variable "aws_organizational_unit_ids" {
-  description = "AWS Organizations OU ID to place the new account in, keyed by environment (dev, test, staging, prod)."
-  type        = map(string)
+variable "aws_organizational_unit_id" {
+  description = "AWS Organizations OU (ou-...) to create every customer account in. Leave null to create accounts at the organization root."
+  type        = string
+  default     = null
 
   validation {
-    condition     = alltrue([for env in ["dev", "test", "staging", "prod"] : contains(keys(var.aws_organizational_unit_ids), env)])
-    error_message = "aws_organizational_unit_ids must have an entry for dev, test, staging and prod."
+    condition     = var.aws_organizational_unit_id == null || can(regex("^(ou-[a-z0-9]+-[a-z0-9]+|r-[a-z0-9]+)$", var.aws_organizational_unit_id))
+    error_message = "aws_organizational_unit_id must be an OU ID (ou-xxxx-xxxxxxxx) or root ID (r-xxxx)."
   }
 }
 

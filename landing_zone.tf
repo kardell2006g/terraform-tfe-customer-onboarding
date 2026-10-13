@@ -63,18 +63,21 @@ resource "tfe_workspace_variable_set" "landing_zone" {
 }
 
 locals {
-  landing_zone_vars = {
-    company_name     = var.company_name
-    environment      = var.environment
-    account_name     = local.name
-    account_email    = local.aws_account_email
-    parent_ou_id     = var.aws_organizational_unit_ids[var.environment]
-    aws_region       = var.aws_region
-    vpc_cidr         = var.vpc_cidr
-    tfc_hostname     = var.tfe_hostname
-    tfc_organization = var.tfe_organization
-    tfc_project_name = tfe_project.customer.name
-  }
+  landing_zone_vars = merge(
+    {
+      company_name     = var.company_name
+      environment      = var.environment
+      account_name     = local.name
+      account_email    = local.aws_account_email
+      aws_region       = var.aws_region
+      vpc_cidr         = var.vpc_cidr
+      tfc_hostname     = var.tfe_hostname
+      tfc_organization = var.tfe_organization
+      tfc_project_name = tfe_project.customer.name
+    },
+    # Unset means the landing zone creates the account at the org root.
+    var.aws_organizational_unit_id != null ? { parent_ou_id = var.aws_organizational_unit_id } : {},
+  )
 }
 
 resource "tfe_variable" "landing_zone" {
