@@ -104,6 +104,11 @@ workspace that doesn't declare the Terraform variables just gets an
   every customer account land in that one inbox. The number is generated once
   per customer and kept in state. Changing `aws_account_root_mailbox` later
   changes every account's email on its next apply.
+- **Tracing an email to its workspace.** The `+aws<number>` part is the
+  landing zone workspace's `aws-email-tag` tag (search workspaces by it), and
+  the full email is in the workspace description. In the other direction,
+  the AWS account and everything in it carry a `TFC Workspace` tag with
+  `<organization>/lz-<company>-<env>`.
 
 - **Removing an email** removes the user's whole organization membership,
   not just their team seat. If people belong to several customers, manage

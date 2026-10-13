@@ -24,7 +24,7 @@ data "tfe_github_app_installation" "this" {
 resource "tfe_workspace" "landing_zone" {
   name              = local.landing_zone_workspace_name
   project_id        = data.tfe_project.landing_zones.id
-  description       = "AWS landing zone for ${var.company_name} (${var.environment}). Created by the customer-onboarding no-code module."
+  description       = "AWS landing zone for ${var.company_name} (${var.environment}). Account root email: ${local.aws_account_email}. Created by the customer-onboarding no-code module."
   working_directory = var.landing_zone_working_directory
 
   # Applies started by this module are confirmed by tfe_workspace_run below.
@@ -42,9 +42,11 @@ resource "tfe_workspace" "landing_zone" {
     oauth_token_id             = var.vcs_oauth_token_id
   }
 
+  # Search workspaces by aws-email-tag to find the one behind an AWS email.
   tags = {
-    company     = local.company_slug
-    environment = var.environment
+    company       = local.company_slug
+    environment   = var.environment
+    aws-email-tag = local.aws_account_email_tag
   }
 }
 

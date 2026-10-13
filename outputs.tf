@@ -32,3 +32,8 @@ output "landing_zone_workspace" {
   description = "HCP Terraform workspace (in the Customer Landing Zones project) that holds the landing zone state."
   value       = tfe_workspace.landing_zone.name
 }
+
+output "aws_account_email" {
+  description = "Root email of the customer AWS account. Its +aws<number> tag is also the landing zone workspace's aws-email-tag."
+  value       = local.aws_account_email
+}

@@ -19,11 +19,14 @@ locals {
 
   landing_zone_workspace_name = "lz-${local.name}"
 
-  # adam.kardell@hashicorp.com -> adam.kardell+aws48213@hashicorp.com
+  # adam.kardell@hashicorp.com -> adam.kardell+aws48213@hashicorp.com. The
+  # "aws48213" part is also a tag on the landing zone workspace, so an AWS
+  # email can be traced back to its workspace.
+  aws_account_email_tag = "aws${random_integer.account_email.result}"
   aws_account_email = format(
-    "%s+aws%d@%s",
+    "%s+%s@%s",
     split("@", var.aws_account_root_mailbox)[0],
-    random_integer.account_email.result,
+    local.aws_account_email_tag,
     split("@", var.aws_account_root_mailbox)[1],
   )
 
