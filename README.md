@@ -11,7 +11,7 @@ apply then, all in HCP Terraform:
    in the organization yet.
 4. Creates the workspace `lz-<company>-<env>` in the **Customer Landing Zones**
    project, sets its variables and runs it. That workspace applies the
-   [customer-landing-zone](https://github.com/ajk81/customer-landing-zone)
+   [customer-landing-zone](https://github.com/kardell2006g/customer-landing-zone)
    repo: a new AWS account in your Organization plus its baseline. **Its state
    lives in that workspace**, not in the no-code workspace.
 5. Creates the variable set `<company>-<env>-aws-landing-zone` from the landing
@@ -59,13 +59,13 @@ workspace that doesn't declare the Terraform variables just gets an
 ## One-time setup
 
 1. **GitHub repos.** Done:
-   [terraform-tfe-customer-onboarding](https://github.com/ajk81/terraform-tfe-customer-onboarding)
-   and [customer-landing-zone](https://github.com/ajk81/customer-landing-zone).
+   [terraform-tfe-customer-onboarding](https://github.com/kardell2006g/terraform-tfe-customer-onboarding)
+   and [customer-landing-zone](https://github.com/kardell2006g/customer-landing-zone).
    Protect `main` on `customer-landing-zone`; every merge queues a plan in
    every customer's `lz-*` workspace. Publishing a new module version needs a
    semver tag (`git tag v1.2.0 && git push --tags`).
 2. **Connect GitHub.** Organization settings → VCS providers → GitHub App,
-   installed on `ajk81` with access to both repos.
+   installed on `kardell2006g` with access to both repos.
 3. **Projects.** Create `Customer Landing Zones`, plus a project for the
    no-code workspaces (e.g. `Customer Onboarding`).
 4. **Variable set: AWS** (e.g. `aws-org-management`) with management-account
@@ -84,8 +84,8 @@ workspace that doesn't declare the Terraform variables just gets an
    |---|---|---|
    | `TFE_TOKEN` | env, sensitive | the team token from step 5 |
    | `tfe_organization` | terraform | `contoso` |
-   | `landing_zone_vcs_repo` | terraform | `ajk81/customer-landing-zone` |
-   | `github_app_installation_name` | terraform | `ajk81` |
+   | `landing_zone_vcs_repo` | terraform | `kardell2006g/customer-landing-zone` |
+   | `github_app_installation_name` | terraform | `kardell2006g` |
    | `landing_zone_variable_set_names` | terraform, HCL | `["aws-org-management"]` |
    | `aws_account_email_domain` | terraform | `contoso.com` |
    | `aws_organizational_unit_ids` | terraform, HCL | `{ dev = "ou-..", test = "ou-..", staging = "ou-..", prod = "ou-.." }` |
