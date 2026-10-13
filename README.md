@@ -85,7 +85,6 @@ workspace that doesn't declare the Terraform variables just gets an
    | `TFE_TOKEN` | env, sensitive | the team token from step 5 |
    | `github_app_installation_name` | terraform | `kardell2006g` |
    | `landing_zone_variable_set_names` | terraform, HCL | `["aws-org-management"]` |
-   | `aws_account_email_domain` | terraform | `contoso.com` |
    | `aws_organizational_unit_id` | terraform | `ou-ab12-cd34ef56` (optional; omit for the org root) |
 
    The HCP Terraform organization isn't set anywhere: the module reads it
@@ -98,6 +97,13 @@ workspace that doesn't declare the Terraform variables just gets an
    allowlist*. Pin `environment` to dev / test / staging / prod.
 
 ## Things to know
+
+- **AWS root emails.** Each account's root email is
+  `adam.kardell+aws<5 random digits>@hashicorp.com` (from
+  `aws_account_root_mailbox`), so root password resets and AWS notices for
+  every customer account land in that one inbox. The number is generated once
+  per customer and kept in state. Changing `aws_account_root_mailbox` later
+  changes every account's email on its next apply.
 
 - **Removing an email** removes the user's whole organization membership,
   not just their team seat. If people belong to several customers, manage

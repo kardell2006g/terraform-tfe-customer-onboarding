@@ -100,15 +100,15 @@ variable "aws_region" {
   default     = "us-east-1"
 }
 
-variable "aws_account_email_prefix" {
-  description = "Local-part prefix for the new AWS account's root email. The account email becomes <prefix>+<company>-<environment>@<domain>."
+variable "aws_account_root_mailbox" {
+  description = "Mailbox that receives every new AWS account's root email. Each account gets <user>+aws<random>@<domain>, which plus-addressing delivers here. Set once: changing it later changes every account's email."
   type        = string
-  default     = "aws"
-}
+  default     = "adam.kardell@hashicorp.com"
 
-variable "aws_account_email_domain" {
-  description = "Domain for the new AWS account's root email. The mailbox must accept plus-addressing."
-  type        = string
+  validation {
+    condition     = can(regex("^[^@+\\s]+@[^@\\s]+\\.[^@\\s]+$", var.aws_account_root_mailbox))
+    error_message = "aws_account_root_mailbox must be a plain address (no '+' tag), e.g. adam.kardell@hashicorp.com."
+  }
 }
 
 variable "aws_organizational_unit_id" {

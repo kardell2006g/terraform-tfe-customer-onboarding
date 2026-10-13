@@ -18,7 +18,14 @@ locals {
   variable_set_name = "${local.name}-aws-landing-zone"
 
   landing_zone_workspace_name = "lz-${local.name}"
-  aws_account_email           = "${var.aws_account_email_prefix}+${local.name}@${var.aws_account_email_domain}"
+
+  # adam.kardell@hashicorp.com -> adam.kardell+aws48213@hashicorp.com
+  aws_account_email = format(
+    "%s+aws%d@%s",
+    split("@", var.aws_account_root_mailbox)[0],
+    random_integer.account_email.result,
+    split("@", var.aws_account_root_mailbox)[1],
+  )
 
   reader_emails = toset([for e in var.reader_emails : lower(trimspace(e))])
 }
@@ -26,3 +33,10 @@ locals {
 # Resolves the provider's organization to a name for the resources that need
 # it spelled out.
 data "tfe_organization" "current" {}
+
+# Random tag for the AWS account email. Generated once per customer and kept
+# in state, so the account's email never changes on later applies.
+resource "random_integer" "account_email" {
+  min = 10000
+  max = 99999
+}
