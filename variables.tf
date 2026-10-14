@@ -33,6 +33,16 @@ variable "reader_emails" {
   }
 }
 
+variable "customer_email" {
+  description = "Customer contact. Receives auto-destroy reminders and drift alerts, and is the base of the AWS account root email (<user>+aws<number>@<domain>). Must have, or will be invited to, an HCP Terraform account."
+  type        = string
+
+  validation {
+    condition     = can(regex("^[^@+\\s]+@[^@\\s]+\\.[^@\\s]+$", var.customer_email))
+    error_message = "customer_email must be a plain address without a '+' tag, e.g. jane.doe@example.com."
+  }
+}
+
 # ---------------------------------------------------------------------------
 # Platform settings. Set these once in a variable set attached to the project
 # where no-code workspaces are created, so requesters never see them.
@@ -100,19 +110,31 @@ variable "aws_region" {
   default     = "us-east-1"
 }
 
-variable "aws_account_root_mailbox" {
-  description = "Mailbox that receives every new AWS account's root email. Each account gets <user>+aws<random>@<domain>, which plus-addressing delivers here. Set once: changing it later changes every account's email."
+variable "aws_dynamic_credentials" {
+  description = "Create a per-customer deploy role in the shared AWS account and give the customer project HCP Terraform dynamic credentials for it. Needs an IAM OIDC provider for HCP Terraform in that account."
+  type        = bool
+  default     = true
+}
+
+variable "test_auto_destroy_duration" {
+  description = "For environment \"test\": destroy the customer's workspaces and landing zone after this long without activity (e.g. \"7d\", \"48h\")."
   type        = string
-  default     = "adam.kardell@hashicorp.com"
+  default     = "7d"
 
   validation {
-    condition     = can(regex("^[^@+\\s]+@[^@\\s]+\\.[^@\\s]+$", var.aws_account_root_mailbox))
-    error_message = "aws_account_root_mailbox must be a plain address (no '+' tag), e.g. adam.kardell@hashicorp.com."
+    condition     = can(regex("^[1-9][0-9]*[dh]$", var.test_auto_destroy_duration))
+    error_message = "test_auto_destroy_duration must be a number of days or hours, e.g. \"7d\" or \"48h\"."
   }
 }
 
-variable "aws_dynamic_credentials" {
-  description = "Create a per-customer deploy role in the shared AWS account and give the customer project HCP Terraform dynamic credentials for it. Needs an IAM OIDC provider for HCP Terraform in that account."
+variable "enable_drift_detection" {
+  description = "Run health assessments (drift detection) on the landing zone workspace. Needs an HCP Terraform plan that includes health assessments."
+  type        = bool
+  default     = true
+}
+
+variable "enable_notifications" {
+  description = "Email customer_email about auto-destroy reminders and detected drift on the landing zone workspace."
   type        = bool
   default     = true
 }

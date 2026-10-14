@@ -1,6 +1,7 @@
 # Customer onboarding (Terraform no-code)
 
-Requesters fill in **company_name**, **environment** and **reader_emails**. One
+Requesters fill in **company_name**, **environment**, **customer_email** and
+**reader_emails**. One
 apply then, all in HCP Terraform:
 
 1. Creates the project `<company_name> <environment>` for the customer's
@@ -27,7 +28,7 @@ account that your **global variable set** gives credentials for.
 |---|---|---|
 | `account_id` | dummy | `000048213907` |
 | `account_name` | dummy, also the prefix of every real resource name | `acme-corp-prod-aws48213` |
-| `account_email` | dummy, never used | `adam.kardell+aws48213@hashicorp.com` |
+| `account_email` | dummy, never used | `jane.doe+aws48213@example.com` |
 | `deployment_account_id` | real: the shared account | `009071937843` |
 | `vpc_id`, `public_subnet_ids`, `private_subnet_ids` | real | `acme-corp-prod-aws48213-vpc` and its subnets |
 | `deploy_role_arn` | real (if `aws_dynamic_credentials`) | `arn:aws:iam::009071937843:role/tfc-deploy-acme-corp-prod-aws48213` |
@@ -53,6 +54,24 @@ workspaces would fight over them.
 
 The original real-account implementation is in the landing zone repo's
 history at commit `80f34fc`.
+
+## Test environments, drift and notifications
+
+- **Auto-destroy (`environment = "test"` only).** The customer project and the
+  landing zone workspace get `auto_destroy_activity_duration =
+  test_auto_destroy_duration` (default `7d`): HCP Terraform destroys their
+  resources after 7 days without a run. Workspaces the customer creates in
+  their project inherit the project setting unless they override it. The
+  landing zone sits in the shared Customer Landing Zones project, so it gets
+  its own setting.
+- **Drift detection.** `assessments_enabled` on the landing zone workspace
+  (`enable_drift_detection`, default `true`). Needs an HCP Terraform plan that
+  includes health assessments.
+- **Notifications to `customer_email`** on the landing zone workspace
+  (`enable_notifications`, default `true`): auto-destroy reminders and
+  results (test only) and drift detected. HCP Terraform only supports
+  notifications on workspaces, not projects, and only emails organization
+  members, so `customer_email` is invited to the organization.
 
 ## Two stacks, two states
 
@@ -130,9 +149,18 @@ variables just gets an "undeclared variable" warning.
 
 ## Things to know
 
+- **`customer_email` must accept the HCP Terraform invitation**, or already
+  have an HCP Terraform account, before notifications can reach them. If the
+  address has no HCP Terraform user yet, creating the notification may fail;
+  set `enable_notifications = false` and turn it on after they join. They
+  don't get project access unless they're also in `reader_emails`.
+- **After a test auto-destroy**, the landing zone's outputs are empty, so the
+  no-code workspace can no longer plan. Destroy the no-code workspace (or
+  re-provision) rather than re-applying it.
+
 - **Account names and emails.** Names are `<company>-<env>-aws<number>` and
-  root emails `adam.kardell+aws<number>@hashicorp.com` (from
-  `aws_account_root_mailbox`), with the same 5-digit number, generated once
+  root emails `<customer_email user>+aws<number>@<domain>` (e.g.
+  `jane.doe+aws48213@example.com`), with the same 5-digit number, generated once
   per customer and kept in state. No email is ever sent while the landing
   zone is a dummy.
 - **Tracing a number to its workspace.** The `aws<number>` part is the

@@ -53,3 +53,8 @@ output "aws_account_is_dummy" {
   description = "True while the customer AWS account is a dummy. Its network and deploy role are real, in the shared account."
   value       = local.lz["is_dummy"]
 }
+
+output "auto_destroy_after" {
+  description = "Inactivity period after which the customer project's workspaces and the landing zone are destroyed. Null outside test."
+  value       = local.auto_destroy_duration
+}

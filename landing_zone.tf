@@ -38,6 +38,13 @@ resource "tfe_workspace" "landing_zone" {
   # orphaned in AWS (tagged "TFC Workspace") and must be cleaned up by hand.
   force_delete = true
 
+  # Test only. The landing zone sits in the shared Customer Landing Zones
+  # project, so it doesn't inherit the customer project's setting.
+  auto_destroy_activity_duration = local.auto_destroy_duration
+
+  # Drift detection; alerts go to customer_email (notifications.tf).
+  assessments_enabled = var.enable_drift_detection
+
   file_triggers_enabled = var.landing_zone_working_directory != ""
   trigger_prefixes      = var.landing_zone_working_directory != "" ? [var.landing_zone_working_directory] : []
 
