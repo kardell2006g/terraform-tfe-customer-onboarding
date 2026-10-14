@@ -14,17 +14,17 @@ output "readers_team_name" {
 }
 
 output "variable_set_name" {
-  description = "Variable set attached to the project with the landing zone settings and AWS dynamic credentials."
+  description = "Variable set attached to the project with the landing zone values."
   value       = tfe_variable_set.customer.name
 }
 
 output "aws_account_id" {
-  description = "AWS account created for the landing zone."
+  description = "AWS account ID from the landing zone. Currently a dummy starting with 0000."
   value       = local.lz["account_id"]
 }
 
 output "aws_deploy_role_arn" {
-  description = "IAM role workspaces in the customer project assume via HCP Terraform dynamic credentials."
+  description = "Deploy role ARN from the landing zone. Currently a dummy that nothing can assume."
   value       = local.lz["deploy_role_arn"]
 }
 
@@ -41,4 +41,9 @@ output "aws_account_email" {
 output "aws_account_name" {
   description = "Name of the customer AWS account (<company>-<environment>-aws<number>)."
   value       = local.aws_account_name
+}
+
+output "aws_account_is_dummy" {
+  description = "True while the landing zone generates placeholder values instead of creating a real AWS account."
+  value       = local.lz["is_dummy"]
 }
