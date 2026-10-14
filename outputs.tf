@@ -13,6 +13,11 @@ output "readers_team_name" {
   value       = tfe_team.readers.name
 }
 
+output "admins_team_name" {
+  description = "Team with admin access to the project."
+  value       = tfe_team.admins.name
+}
+
 output "variable_set_name" {
   description = "Variable set attached to the project with the landing zone values."
   value       = tfe_variable_set.customer.name

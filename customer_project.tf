@@ -35,7 +35,30 @@ resource "tfe_team_project_access" "readers" {
 }
 
 # ---------------------------------------------------------------------------
-# Organization members: the readers, plus the customer contact (needed so
+# Admin team
+# ---------------------------------------------------------------------------
+
+resource "tfe_team" "admins" {
+  name       = local.admin_team_name
+  visibility = "organization"
+
+  # No organization-level permissions; access comes only from the project.
+  organization_access {
+    read_projects   = false
+    read_workspaces = false
+  }
+}
+
+# "admin": full control of the project and its workspaces, including creating
+# and deleting workspaces, variables, state and team access to the project.
+resource "tfe_team_project_access" "admins" {
+  team_id    = tfe_team.admins.id
+  project_id = tfe_project.customer.id
+  access     = "admin"
+}
+
+# ---------------------------------------------------------------------------
+# Organization members: readers, admins and the customer contact (needed so
 # HCP Terraform can email them notifications).
 #
 # A user must belong to the organization before joining a team or receiving
@@ -49,16 +72,23 @@ moved {
 }
 
 resource "tfe_organization_membership" "members" {
-  for_each = setunion(local.reader_emails, [local.customer_email])
+  for_each = setunion(local.reader_emails, local.admin_emails, [local.customer_email])
 
   email = each.value
 }
 
-# Only reader_emails join the read-only team. Add customer_email to
-# reader_emails too if the customer should see the project.
+# customer_email only joins a team if it's also in reader_emails or
+# admin_emails.
 resource "tfe_team_organization_members" "readers" {
   count = length(local.reader_emails) > 0 ? 1 : 0
 
   team_id                     = tfe_team.readers.id
   organization_membership_ids = [for e in local.reader_emails : tfe_organization_membership.members[e].id]
+}
+
+resource "tfe_team_organization_members" "admins" {
+  count = length(local.admin_emails) > 0 ? 1 : 0
+
+  team_id                     = tfe_team.admins.id
+  organization_membership_ids = [for e in local.admin_emails : tfe_organization_membership.members[e].id]
 }

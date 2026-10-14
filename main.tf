@@ -15,6 +15,7 @@ locals {
   # Project names allow letters, digits, spaces, '-' and '_'.
   project_name      = "${trimspace(replace(var.company_name, "/[^A-Za-z0-9 _-]/", ""))} ${var.environment}"
   team_name         = "${local.name}-readers"
+  admin_team_name   = "${local.name}-admins"
   variable_set_name = "${local.name}-aws-landing-zone"
 
   landing_zone_workspace_name = "lz-${local.name}"
@@ -35,6 +36,7 @@ locals {
   aws_account_name = "${local.name}-${local.aws_account_email_tag}"
 
   reader_emails  = toset([for e in var.reader_emails : lower(trimspace(e))])
+  admin_emails   = toset([for e in var.admin_emails : lower(trimspace(e))])
   customer_email = lower(trimspace(var.customer_email))
 
   # Test stacks clean themselves up after a period without activity.

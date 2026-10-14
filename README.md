@@ -1,20 +1,21 @@
 # Customer onboarding (Terraform no-code)
 
-Requesters fill in **company_name**, **environment**, **customer_email** and
-**reader_emails**. One
-apply then, all in HCP Terraform:
+Requesters fill in **company_name**, **environment**, **customer_email**,
+**reader_emails** and **admin_emails**. One apply then, all in HCP Terraform:
 
 1. Creates the project `<company_name> <environment>` for the customer's
    workspaces.
 2. Creates the team `<company>-<env>-readers` with **read** access to that
    project.
-3. Adds every email in `reader_emails` to the team, inviting anyone who isn't
-   in the organization yet.
-4. Creates the workspace `lz-<company>-<env>` in the **Customer Landing Zones**
+3. Creates the team `<company>-<env>-admins` with **admin** access to that
+   project.
+4. Adds every email in `reader_emails` and `admin_emails` to its team,
+   inviting anyone who isn't in the organization yet.
+5. Creates the workspace `lz-<company>-<env>` in the **Customer Landing Zones**
    project, sets its variables and runs it. That workspace applies the
    [customer-landing-zone](https://github.com/kardell2006g/customer-landing-zone)
    repo. **Its state lives in that workspace**, not in the no-code workspace.
-5. Creates the variable set `<company>-<env>-aws-landing-zone` from the landing
+6. Creates the variable set `<company>-<env>-aws-landing-zone` from the landing
    zone outputs and attaches it to the customer project.
 
 ## Dummy account, real network
@@ -76,7 +77,7 @@ history at commit `80f34fc`.
 
 | Stack | Runs in | State |
 |---|---|---|
-| `terraform-tfe-customer-onboarding` (this module) | The no-code workspace the requester provisions | Customer project, team, memberships, variable set, the landing zone *workspace* |
+| `terraform-tfe-customer-onboarding` (this module) | The no-code workspace the requester provisions | Customer project, reader and admin teams, memberships, variable set, the landing zone *workspace* |
 | `customer-landing-zone` | `lz-<company>-<env>` in project **Customer Landing Zones** | Dummy account ID, customer VPC and deploy role |
 
 The handoff uses `tfe_workspace_run` (apply on create, destroy on destroy) and
@@ -161,7 +162,10 @@ variables just gets an "undeclared variable" warning.
 - **Tracing a number to its workspace.** The `aws<number>` part is the
   landing zone workspace's `aws-email-tag` tag (search workspaces by it), and
   the full email is in the workspace description.
-- **Removing an email** from `reader_emails` removes the user's whole
+- **Admin** project access lets the admins team create, change and delete
+  workspaces in the project, manage their variables and state, and manage
+  other teams' access to the project.
+- **Removing an email** from `reader_emails` or `admin_emails` removes the user's whole
   organization membership, not just their team seat. If people belong to
   several customers, manage memberships elsewhere and switch this module to
   look them up (`data "tfe_organization_membership"`).

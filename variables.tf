@@ -33,6 +33,17 @@ variable "reader_emails" {
   }
 }
 
+variable "admin_emails" {
+  description = "Email addresses to add to the project's admin team. Anyone not yet in the HCP Terraform organization gets an invitation."
+  type        = list(string)
+  default     = []
+
+  validation {
+    condition     = alltrue([for e in var.admin_emails : can(regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$", e))])
+    error_message = "Every entry in admin_emails must be a valid email address."
+  }
+}
+
 variable "customer_email" {
   description = "Customer contact. Receives drift alerts, and is the base of the AWS account root email (<user>+aws<number>@<domain>). Must have, or will be invited to, an HCP Terraform account."
   type        = string
