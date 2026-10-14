@@ -32,6 +32,12 @@ resource "tfe_workspace" "landing_zone" {
   auto_apply     = false
   queue_all_runs = false
 
+  # tfe_workspace_run destroys the landing zone before this workspace is
+  # deleted, so its state is normally empty by then. force_delete deletes the
+  # workspace even if that destroy left resources behind; they're then
+  # orphaned in AWS (tagged "TFC Workspace") and must be cleaned up by hand.
+  force_delete = true
+
   file_triggers_enabled = var.landing_zone_working_directory != ""
   trigger_prefixes      = var.landing_zone_working_directory != "" ? [var.landing_zone_working_directory] : []
 

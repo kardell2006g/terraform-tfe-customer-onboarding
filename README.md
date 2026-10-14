@@ -63,7 +63,11 @@ history at commit `80f34fc`.
 
 The handoff uses `tfe_workspace_run` (apply on create, destroy on destroy) and
 `data "tfe_outputs"`. Destroying the no-code workspace destroys the customer's
-VPC and role first, then deletes the landing zone workspace.
+VPC and role first, then deletes the landing zone workspace. The workspace has
+`force_delete = true`, so it's deleted even if that destroy left resources in
+its state; anything left behind is orphaned in AWS and can be found by its
+`TFC Workspace` tag. The deploy role has `force_detach_policies = true`, so
+policies attached outside Terraform don't block its deletion.
 
 ## Variable set contents
 
