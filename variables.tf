@@ -111,15 +111,10 @@ variable "aws_account_root_mailbox" {
   }
 }
 
-variable "aws_organizational_unit_id" {
-  description = "AWS Organizations OU (ou-...) to create every customer account in. Leave null to create accounts at the organization root."
-  type        = string
-  default     = null
-
-  validation {
-    condition     = var.aws_organizational_unit_id == null || can(regex("^(ou-[a-z0-9]+-[a-z0-9]+|r-[a-z0-9]+)$", var.aws_organizational_unit_id))
-    error_message = "aws_organizational_unit_id must be an OU ID (ou-xxxx-xxxxxxxx) or root ID (r-xxxx)."
-  }
+variable "aws_dynamic_credentials" {
+  description = "Create a per-customer deploy role in the shared AWS account and give the customer project HCP Terraform dynamic credentials for it. Needs an IAM OIDC provider for HCP Terraform in that account."
+  type        = bool
+  default     = true
 }
 
 variable "vpc_cidr" {

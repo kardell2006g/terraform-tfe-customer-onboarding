@@ -16,53 +16,72 @@ apply then, all in HCP Terraform:
 5. Creates the variable set `<company>-<env>-aws-landing-zone` from the landing
    zone outputs and attaches it to the customer project.
 
-## The landing zone is a dummy
+## Dummy account, real network
 
-**Nothing is created in AWS.** The landing zone has no AWS provider and needs
-no AWS credentials. It generates placeholder values shaped like a real landing
-zone's and keeps them in its workspace state, so they're stable across runs:
+**No AWS account is created.** The customer's account is a dummy: its ID is
+generated (always starting with `0000`) and kept in the landing zone state.
+The customer's **network and deploy role are real**, built in the shared AWS
+account that your **global variable set** gives credentials for.
 
-| Output | Example |
-|---|---|
-| `account_id` | `000048213907` (always starts with `0000`) |
-| `account_name` | `acme-corp-prod-aws48213` |
-| `account_email` | `adam.kardell+aws48213@hashicorp.com` |
-| `deploy_role_arn` | `arn:aws:iam::000048213907:role/tfc-deploy` |
-| `vpc_id`, `public_subnet_ids`, `private_subnet_ids` | `vpc-…`, `subnet-…` (17 hex characters) |
-| `is_dummy` | `true` |
+| Landing zone output | Real? | Example |
+|---|---|---|
+| `account_id` | dummy | `000048213907` |
+| `account_name` | dummy, also the prefix of every real resource name | `acme-corp-prod-aws48213` |
+| `account_email` | dummy, never used | `adam.kardell+aws48213@hashicorp.com` |
+| `deployment_account_id` | real: the shared account | `009071937843` |
+| `vpc_id`, `public_subnet_ids`, `private_subnet_ids` | real | `acme-corp-prod-aws48213-vpc` and its subnets |
+| `deploy_role_arn` | real (if `aws_dynamic_credentials`) | `arn:aws:iam::009071937843:role/tfc-deploy-acme-corp-prod-aws48213` |
+| `is_dummy` | | `true` |
 
-The real implementation (AWS account, security baseline, VPC, OIDC deploy
-role) is in the landing zone repo's history at commit `80f34fc`. Restoring it
-also means adding `TFC_AWS_PROVIDER_AUTH` and `TFC_AWS_RUN_ROLE_ARN` back to
-the customer variable set (see `variable_set.tf`).
+Per customer, in the shared account:
+
+- VPC (`vpc_cidr`, default `10.0.0.0/16`) with public and private /20 subnets
+  across 2 AZs, internet gateway, route tables, and a rule-less default
+  security group. NAT gateway off by default (`enable_nat_gateway` in the
+  landing zone, about $32/month each).
+- With `aws_dynamic_credentials` (default `true`): the IAM role
+  `tfc-deploy-<account name>` with `PowerUserAccess`, which only workspaces
+  in the customer's HCP Terraform project can assume. It reuses the account's
+  existing HCP Terraform OIDC provider (one per account), so that provider
+  must already exist.
+- Every resource is tagged `Company`, `Environment`, `Customer Account` and
+  `TFC Workspace`.
+
+Account-wide settings (EBS default encryption, S3 public access block,
+password policy) are left alone: they're one-per-account, so per-customer
+workspaces would fight over them.
+
+The original real-account implementation is in the landing zone repo's
+history at commit `80f34fc`.
 
 ## Two stacks, two states
 
 | Stack | Runs in | State |
 |---|---|---|
 | `terraform-tfe-customer-onboarding` (this module) | The no-code workspace the requester provisions | Customer project, team, memberships, variable set, the landing zone *workspace* |
-| `customer-landing-zone` | `lz-<company>-<env>` in project **Customer Landing Zones** | Dummy account values |
+| `customer-landing-zone` | `lz-<company>-<env>` in project **Customer Landing Zones** | Dummy account ID, customer VPC and deploy role |
 
 The handoff uses `tfe_workspace_run` (apply on create, destroy on destroy) and
-`data "tfe_outputs"`. Destroying the no-code workspace destroys the landing
-zone first, then deletes its workspace.
+`data "tfe_outputs"`. Destroying the no-code workspace destroys the customer's
+VPC and role first, then deletes the landing zone workspace.
 
 ## Variable set contents
 
-Attached to the customer project, so every workspace there sees the landing
-zone values:
+Attached to the customer project:
 
 | Key | Category | Value |
 |---|---|---|
 | `AWS_REGION` | env | landing zone region |
-| `company_name`, `environment`, `aws_account_id`, `aws_account_name`, `aws_region`, `aws_deploy_role_arn`, `vpc_id` | terraform | strings |
+| `TFC_AWS_PROVIDER_AUTH`, `TFC_AWS_RUN_ROLE_ARN` | env | dynamic credentials for the customer's deploy role (only with `aws_dynamic_credentials`) |
+| `company_name`, `environment`, `aws_account_id`, `aws_account_name`, `aws_deployment_account_id`, `aws_region`, `vpc_id` | terraform | strings |
+| `aws_deploy_role_arn` | terraform | role ARN (only with `aws_dynamic_credentials`) |
 | `aws_account_is_dummy` | terraform (HCL) | `true` |
 | `public_subnet_ids`, `private_subnet_ids` | terraform (HCL) | lists |
 
-AWS dynamic credentials are deliberately **not** set: with a dummy role ARN,
-every AWS provider in the project would fail to authenticate. A workspace that
-doesn't declare these Terraform variables just gets an "undeclared variable"
-warning.
+Project variable sets take precedence over global ones, so with
+`aws_dynamic_credentials` the customer's workspaces use their own role instead
+of the global credentials. A workspace that doesn't declare the Terraform
+variables just gets an "undeclared variable" warning.
 
 ## One-time setup
 
@@ -76,25 +95,32 @@ warning.
    installed on `kardell2006g` with access to both repos.
 3. **Projects.** Create `Customer Landing Zones`, plus a project for the
    no-code workspaces (e.g. `Customer Onboarding`).
-4. **Team token.** Create a team (e.g. `customer-onboarding`) with
+4. **Global variable set: AWS.** Credentials for the shared AWS account the
+   customer networks go into. Dynamic credentials are recommended:
+   `TFC_AWS_PROVIDER_AUTH = true` and `TFC_AWS_RUN_ROLE_ARN` for a role that
+   can manage VPCs, subnets, gateways and route tables, create and delete
+   `tfc-deploy-*` IAM roles, and attach policies to them. That setup also
+   creates the HCP Terraform OIDC provider the customer deploy roles reuse.
+   Because it's global, every workspace in the organization gets these
+   credentials unless a project or workspace overrides them.
+5. **Team token.** Create a team (e.g. `customer-onboarding`) with
    organization permissions **Manage projects**, **Manage teams**,
    **Manage membership** and **Manage variable sets**, and **Admin** on
    `Customer Landing Zones`. Generate its team token. An organization token
    won't work: it can't start runs.
-5. **Variable set: onboarding platform**, attached to the onboarding project:
+6. **Variable set: onboarding platform**, attached to the onboarding project:
 
    | Key | Category | Example |
    |---|---|---|
-   | `TFE_TOKEN` | env, sensitive | the team token from step 4 |
+   | `TFE_TOKEN` | env, sensitive | the team token from step 5 |
    | `github_app_installation_name` | terraform | `kardell2006g` |
 
    The HCP Terraform organization isn't set anywhere: the module reads it
    from `TFC_WORKSPACE_SLUG`, which HCP Terraform injects into every run.
    For a local run, export `TFE_ORGANIZATION` instead. The landing zone repo
-   is fixed to `kardell2006g/customer-landing-zone` in `main.tf`. No AWS
-   variable set is needed while the landing zone is a dummy.
+   is fixed to `kardell2006g/customer-landing-zone` in `main.tf`.
 
-6. **Publish.** Registry → Publish → Module → GitHub → pick
+7. **Publish.** Registry → Publish → Module → GitHub → pick
    `terraform-tfe-customer-onboarding`, tick *Add module to no-code provision
    allowlist*. Pin `environment` to dev / test / staging / prod.
 
@@ -120,6 +146,8 @@ warning.
 - `tfe_workspace_run` only applies on create. Later changes to
   `customer-landing-zone` come in as VCS runs on each `lz-*` workspace and
   wait for approval.
-- `aws_organizational_unit_id`, `aws_region`, `vpc_cidr` and
-  `landing_zone_variable_set_names` are still accepted but have no effect on
-  the dummy landing zone, apart from `aws_region` being reported back.
+- Every customer gets `vpc_cidr` (default `10.0.0.0/16`). Overlapping VPCs in
+  one account are fine, but they can't be peered with each other. Watch the
+  regional VPC limit (5 per region by default) in the shared account.
+- `landing_zone_variable_set_names` is optional now that AWS credentials come
+  from the global variable set.

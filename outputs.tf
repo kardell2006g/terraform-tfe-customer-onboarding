@@ -19,13 +19,19 @@ output "variable_set_name" {
 }
 
 output "aws_account_id" {
-  description = "AWS account ID from the landing zone. Currently a dummy starting with 0000."
+  description = "Dummy customer AWS account ID (starts with 0000)."
   value       = local.lz["account_id"]
 }
 
 output "aws_deploy_role_arn" {
-  description = "Deploy role ARN from the landing zone. Currently a dummy that nothing can assume."
-  value       = local.lz["deploy_role_arn"]
+  description = "Per-customer deploy role in the shared AWS account, or null when aws_dynamic_credentials is false."
+  # tfe_outputs drops null outputs, so the key is missing when disabled.
+  value = lookup(local.lz, "deploy_role_arn", null)
+}
+
+output "aws_deployment_account_id" {
+  description = "Real AWS account the customer's network and deploy role are in."
+  value       = local.lz["deployment_account_id"]
 }
 
 output "landing_zone_workspace" {
@@ -44,6 +50,6 @@ output "aws_account_name" {
 }
 
 output "aws_account_is_dummy" {
-  description = "True while the landing zone generates placeholder values instead of creating a real AWS account."
+  description = "True while the customer AWS account is a dummy. Its network and deploy role are real, in the shared account."
   value       = local.lz["is_dummy"]
 }
