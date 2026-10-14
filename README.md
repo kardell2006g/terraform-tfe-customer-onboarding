@@ -57,21 +57,20 @@ history at commit `80f34fc`.
 
 ## Test environments, drift and notifications
 
-- **Auto-destroy (`environment = "test"` only).** The customer project and the
-  landing zone workspace get `auto_destroy_activity_duration =
-  test_auto_destroy_duration` (default `7d`): HCP Terraform destroys their
-  resources after 7 days without a run. Workspaces the customer creates in
-  their project inherit the project setting unless they override it. The
-  landing zone sits in the shared Customer Landing Zones project, so it gets
-  its own setting.
+- **Auto-destroy (`environment = "test"` only).** The customer project gets
+  `auto_destroy_activity_duration = test_auto_destroy_duration` (default
+  `7d`), so workspaces the customer creates in it are destroyed after 7 days
+  without a run, unless they override it. The landing zone workspace and the
+  Customer Landing Zones project never auto-destroy.
 - **Drift detection.** `assessments_enabled` on the landing zone workspace
   (`enable_drift_detection`, default `true`). Needs an HCP Terraform plan that
   includes health assessments.
-- **Notifications to `customer_email`** on the landing zone workspace
-  (`enable_notifications`, default `true`): auto-destroy reminders and
-  results (test only) and drift detected. HCP Terraform only supports
+- **Drift notifications to `customer_email`** on the landing zone workspace
+  (`enable_notifications`, default `true`). HCP Terraform only supports
   notifications on workspaces, not projects, and only emails organization
-  members, so `customer_email` is invited to the organization.
+  members, so `customer_email` is invited to the organization. Auto-destroy
+  reminders need a notification on each auto-destroying workspace, i.e. the
+  ones the customer creates in their project, so they aren't set up here.
 
 ## Two stacks, two states
 
@@ -154,10 +153,6 @@ variables just gets an "undeclared variable" warning.
   address has no HCP Terraform user yet, creating the notification may fail;
   set `enable_notifications = false` and turn it on after they join. They
   don't get project access unless they're also in `reader_emails`.
-- **After a test auto-destroy**, the landing zone's outputs are empty, so the
-  no-code workspace can no longer plan. Destroy the no-code workspace (or
-  re-provision) rather than re-applying it.
-
 - **Account names and emails.** Names are `<company>-<env>-aws<number>` and
   root emails `<customer_email user>+aws<number>@<domain>` (e.g.
   `jane.doe+aws48213@example.com`), with the same 5-digit number, generated once

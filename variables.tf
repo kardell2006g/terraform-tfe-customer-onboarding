@@ -34,7 +34,7 @@ variable "reader_emails" {
 }
 
 variable "customer_email" {
-  description = "Customer contact. Receives auto-destroy reminders and drift alerts, and is the base of the AWS account root email (<user>+aws<number>@<domain>). Must have, or will be invited to, an HCP Terraform account."
+  description = "Customer contact. Receives drift alerts, and is the base of the AWS account root email (<user>+aws<number>@<domain>). Must have, or will be invited to, an HCP Terraform account."
   type        = string
 
   validation {
@@ -117,7 +117,7 @@ variable "aws_dynamic_credentials" {
 }
 
 variable "test_auto_destroy_duration" {
-  description = "For environment \"test\": destroy the customer's workspaces and landing zone after this long without activity (e.g. \"7d\", \"48h\")."
+  description = "For environment \"test\": destroy workspaces in the customer's project after this long without activity (e.g. \"7d\", \"48h\"). The landing zone is never auto-destroyed."
   type        = string
   default     = "7d"
 
@@ -134,7 +134,7 @@ variable "enable_drift_detection" {
 }
 
 variable "enable_notifications" {
-  description = "Email customer_email about auto-destroy reminders and detected drift on the landing zone workspace."
+  description = "Email customer_email when drift is detected on the landing zone workspace."
   type        = bool
   default     = true
 }

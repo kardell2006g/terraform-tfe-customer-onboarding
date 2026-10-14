@@ -55,6 +55,6 @@ output "aws_account_is_dummy" {
 }
 
 output "auto_destroy_after" {
-  description = "Inactivity period after which the customer project's workspaces and the landing zone are destroyed. Null outside test."
+  description = "Inactivity period after which workspaces in the customer project are destroyed. Null outside test."
   value       = local.auto_destroy_duration
 }
